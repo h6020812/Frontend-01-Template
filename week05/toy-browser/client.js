@@ -20,7 +20,6 @@ class Request {
     } else if (this.headers["Content-Type"] === "application/x-www-form-urlencoded") {
       this.bodyText = Object.keys(this.body).map(key => `${key}=${encodeURIComponent(this.body[key])}`).join('&')
     }
-
     this.headers["Content-Length"] = this.bodyText.length;
   }
 
@@ -33,9 +32,9 @@ ${this.bodyText}`
 
   send(connection) {
     return new Promise((resolve, reject) => {
+      const parser = new ResponseParser;
       if (connection) {
         connection.write(this.toString());
-        
       } else {
         connection = net.createConnection({
           host: this.host,
@@ -45,7 +44,9 @@ ${this.bodyText}`
         })
       }
       connection.on('data', (data) => {
-        resolve(data.toString());
+        parser.receive(data.toString());
+        console.log("Request -> send -> parser", parser.headers)
+        // resolve(data.toString());
         connection.end();
       });
       connection.on('error', (err) => {
@@ -53,7 +54,6 @@ ${this.bodyText}`
         connection.end();
       });
     })
-
   }
 }
 
@@ -62,6 +62,81 @@ class Response {
 }
 
 class ResponseParser {
+  constructor() {
+    this.WATTING_STATUS_LINE = 0;
+    this.WATTING_STATUS_LINE_END = 1;
+    this.WATTING_HEADER_NAME = 2;
+    this.WATTING_HEADER_SPACE = 3;
+    this.WATTING_HEADER_VALUE = 4;
+    this.WATTING_HEADER_LINE_END = 5;
+    this.WATTING_HEADER_BLOCK_END = 6;
+    this.WATTING_BODY = 7;
+    
+    this.current = this.WATTING_STATUS_LINE;
+    this.statusLine = "";
+    this.headers = {};
+    this.headerName = "";
+    this.headerValue = "";
+
+  }
+  receive(string) {
+    for (let i = 0; i < string.length; i++) {
+      this.receiveChar(string.charAt(i));      
+    }
+  }
+  receiveChar(char) {
+    if (this.current === this.WATTING_STATUS_LINE) {
+      if (char === '\r') {
+        this.current = this.WATTING_HEADER_LINE_END; 
+      } if (char === '\n') {
+        this.current = this.WATTING_HEADER_NAME;
+      } else {
+        this.statusLine += char;
+      }
+    }
+    else if (this.current === this.WATTING_HEADER_LINE_END) {
+      if (char === '\n') {
+        this.current = this.WATTING_HEADER_NAME;
+      } 
+    }  
+    else if (this.current === this.WATTING_HEADER_NAME) {
+      console.log("ResponseParser -> receiveChar -> char", char)
+      if (char === ':') {
+        this.current = this.WATTING_HEADER_SPACE;
+        console.log('////')
+      } if (char === '/r') {
+        this.current = this.WATTING_BODY;
+        console.log('////')
+      } else {
+        this.headerName += char;
+      }
+    }  
+    else if (this.current === this.WATTING_HEADER_SPACE) {
+      if (char === ' ') {
+        this.current = this.WATTING_HEADER_VALUE;
+      } else {
+        this.headerName += char;
+      }
+    }  
+    else if (this.current === this.WATTING_HEADER_VALUE) {
+      if (char === '\r') {
+        this.current = this.WATTING_HEADER_LINE_END; 
+        this.headers[this.headerName] = this.headerValue;
+        this.headerName = "";
+        this.headerValue = "";
+      } else {
+        this.headerValue += char; 
+      }
+    }  
+    else if (this.current === this.WATTING_HEADER_LINE_END) {
+      if (char === '\n') {
+        this.current = this.WATTING_HEADER_NAME; 
+      }  
+    }
+  }
+} 
+
+class TrunkedBodyParser {
 
 }
 
