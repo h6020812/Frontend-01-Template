@@ -77,6 +77,7 @@ class ResponseParser {
     this.headers = {};
     this.headerName = "";
     this.headerValue = "";
+    this.bodyParser = null; // 根據 haeder某屬性生成
 
   }
   receive(string) {
@@ -103,10 +104,11 @@ class ResponseParser {
       console.log("ResponseParser -> receiveChar -> char", char)
       if (char === ':') {
         this.current = this.WATTING_HEADER_SPACE;
-        console.log('////')
-      } if (char === '/r') {
+      } else if (char === '/r') {
         this.current = this.WATTING_BODY;
-        console.log('////')
+        // if (this.headers) {
+        //   this.bodyParser = new TrunkedBodyParser();
+        // }
       } else {
         this.headerName += char;
       }
