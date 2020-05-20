@@ -2,10 +2,47 @@ let currentToken = null;
 let currentAttribute = null;
 const EOF = Symbol("EOF"); //EOF: End of File
 
+let stack = [{type: "document", children:[]}] // build stack
+
 function emit(token) {
-  if (token.type != "text") {
-    
-    console.log(token);
+  if (token.type === "text") {
+    return;
+  }
+  let top = stack[stack.length - 1];
+
+  if (token.type == "startTag") {
+    let element = {
+      type: "element",
+      children: [],
+      attributes: []
+    };
+
+    element.tagName = token.tagName; 
+
+    for (const p in token) {
+      if (p != "type" && p != "tagName") {
+        element.attributes.push({
+          name: p,
+          value: token[p]
+        });
+      }
+    }
+
+    top.children.push(element);
+    element.parent = top;
+
+    if (!token.isSelfClosing) {
+      stack.push(element);
+    }
+
+    currentTextNode = null;
+  }else if (token.type == "endTag"){
+    if (top.tagName != token.tagName) {
+      throw new Error("Tag start end doesn't match !")
+    } else {
+      stack.pop();
+    }
+    currentTextNode = null;
   }
 }
 
@@ -31,7 +68,7 @@ function tagOpen(c) {
     return endTagOpen;
   } else if (c.match(/^[a-zA-Z]$/)) {
     currentToken = {
-      type: "starTag",
+      type: "startTag",
       tagName: ""
     }
     // currentAttribute = null
@@ -228,4 +265,5 @@ module.exports.parseHTML = function parseHTML(html) {
       state = state(c);
     }
     state = state(EOF);
+    console.log(stack[0]);
 }
