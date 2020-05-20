@@ -11,7 +11,7 @@ const server = http.createServer((req, res) => {
 `<html maaa=a >
 <head>
     <style>
-body div #myid{
+body div img #myid{
     width:100px;
     background-color: #ff5000;
 }
