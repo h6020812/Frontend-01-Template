@@ -1,5 +1,5 @@
 const net = require("net"); // 文檔
-// const parser = require("")
+const parser = require("./parser.js")
 
 class Request {
   // method, url = host + port + path
@@ -178,7 +178,7 @@ class TrunkedBodyParser {
       this.current=this.WAITING_LENGTH;
     }
     receiveChar(char){
-        console.log(JSON.stringify(char));
+        // console.log(JSON.stringify(char));
         if(this.current===this.WAITING_LENGTH){
             if(char==='\r'){
                 if(this.length===0){
@@ -238,42 +238,3 @@ void async function () {
   let dom = parser.parseHTML(response.body);
   
 }();
-
-
-/*
-const client = net.createConnection({
-  host: '127.0.0.1',
-  port: 8088,
-}, () => { // <=== 寫 headers文本
-  // 'connect' listener.
-  console.log('connected to server!');
-  
-  console.log("request", request.toString());
-  client.write(request.toString());
-  // client.write('POST / HTTP/1.1\r\n');
-  // client.write('Host: 127.0.0.1\r\n');
-  // client.write('Content-Type: application/x-www-form-urlencoded\r\n');
-  // client.write('\r\n'); // 注意不能漏
-  // client.write("name=winter");
-  // client.write('\r\n');
-  // client.write('field1=aaa&code=x%3D1\r\n');
-//   client.write(`
-// POST / HTTP/1.1\r
-// Content-Type: application/x-www-form-urlencoded\r
-// Content-Length: 11\r
-// \r
-// name=winter`);
-
-});
-client.on('data', (data) => {
-  console.log(data.toString());
-  client.end();
-});
-client.on('end', () => {
-  console.log('disconnected from server');
-});
-client.on('error', (err) => {
-  console.log("error", err);
-  client.end();
-});
-*/
