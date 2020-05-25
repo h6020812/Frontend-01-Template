@@ -1,9 +1,24 @@
+const css = require('css');
+
 let currentToken = null;
 let currentAttribute = null;
 const EOF = Symbol("EOF"); //EOF: End of File
 
 let stack = [{type: "document", children:[]}] // build stack
 let currentTextNode = null;
+
+// 加入 addCSSRules函數，把CSS規則存到數組裡
+let rules = [];
+function addCSSRules(text) { 
+  var ast = css.parse(text);
+   console.log(JSON.stringify(ast, null, "   "));
+  rules.push(...ast.stylesheet.rules);
+}
+
+function computeCSS(element) {
+  console.log(rules);
+  console.log("r", element)
+}
 
 function emit(token) {
   let top = stack[stack.length - 1];
@@ -15,7 +30,7 @@ function emit(token) {
       attributes: []
     };
 
-    element.tagName = token.tagName; 
+    element.tagName = token.tagName;  
 
     for (const p in token) {
       if (p != "type" && p != "tagName") {
@@ -25,6 +40,8 @@ function emit(token) {
         });
       }
     }
+
+    computeCSS(element);
 
     top.children.push(element);
     element.parent = top;
@@ -38,6 +55,10 @@ function emit(token) {
     if (top.tagName != token.tagName) {
       throw new Error("Tag start end doesn't match !")
     } else {
+      //-----遇到style標籤，添加CSS規則-------//
+      if (top.tagName === "style") {
+        addCSSRules(top.children[0].content);
+      }
       stack.pop();
     }
     currentTextNode = null;
