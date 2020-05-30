@@ -1,6 +1,8 @@
 const net = require("net"); // 文檔
 const parser = require("./parser.js")
 
+
+
 class Request {
   // method, url = host + port + path
   // body k/v
@@ -233,8 +235,8 @@ void async function () {
   })
   
   let response = await request.send();
-  // console.log("response", response)
-
   let dom = parser.parseHTML(response.body);
+
+  console.log(JSON.stringify(dom, null, " "))
   
 }();
