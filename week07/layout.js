@@ -65,7 +65,7 @@ function layout(element) {
     mainSign = +1;
     mainBase = 0;
 
-    corssSize = 'height';
+    crossSize = 'height';
     crossStart = 'top';
     crossEnd = 'bottom';
   }
@@ -76,7 +76,7 @@ function layout(element) {
     mainSign = -1;
     mainBase = style.width;
 
-    corssSize = 'height';
+    crossSize = 'height';
     crossStart = 'top';
     crossEnd = 'bottom';
   }
@@ -87,7 +87,7 @@ function layout(element) {
     mainSign = +1;
     mainBase = 0;
 
-    corssSize = 'width';
+    crossSize = 'width';
     crossStart = 'left';
     crossEnd = 'right';
   }
@@ -98,7 +98,7 @@ function layout(element) {
     mainSign = -1;
     mainBase = style.height;
 
-    corssSize = 'width';
+    crossSize = 'width';
     crossStart = 'left';
     crossEnd = 'right';
   }
@@ -131,7 +131,7 @@ function layout(element) {
   // 行內空白
   let mainSpace = elementStyle[mainSize];
   let crossSpace = 0;
-
+  crossSpace
   for (let i = 0; i < items.length; i++) {
     const item = items[i];
     let itemStyle = getStyle(item);
@@ -166,193 +166,193 @@ function layout(element) {
         crossSpace = Math.max(crossSpace, itemStyle[crossSize]);
       }
       mainSpace -= itemStyle[mainSize];
+      mainSpace
     }
-    flexLine.mainSpace = mainSpace;
+  }
+  flexLine.mainSpace = mainSpace;
 
-    console.log(items);
+  console.log(items);
 
-    if (style.flexWrap === 'nowrap' || isAutoMainSize) {
-      flexLine.crossSpace = (style[crossSize] !== undefined) ? style[crossSize] : 0;
-    } else {
-      flexLine.crossSpace = crossSpace;
+  if (style.flexWrap === 'nowrap' || isAutoMainSize) {
+    flexLine.crossSpace = (style[crossSize] !== undefined) ? style[crossSize] : crossSpace;
+  } else {
+    flexLine.crossSpace = crossSpace;
+  }
+
+  if (mainSpace < 0) {
+    // overflow
+    let scale = style[mainSize] / (style[mainSize] - mainSpace);
+
+    let currentMain = mainBase;
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      let itemStyle = getStyle(item);
+
+      if (itemStyle.flex) {
+        itemStyle[mainSize] = 0;
+      }
+
+      itemStyle[mainSize] = itemStyle[mainSize] * scale;
+
+      itemStyle[mainStart] = currentMain;
+      itemStyle[mainEnd] = itemStyle[mainStart] + mainSign * itemStyle[mainSize];
+      currentMain = itemStyle[mainEnd];
     }
-
-    if (mainSpace < 0) {
-      // overflow
-      let scale = style[mainSize] / (style[mainSize] - mainSpace);
-
-      let currentMain = mainBase;
+  } else {
+    // process each flex line
+    flexLines.forEach((items) => {
+      items
+      let mainSpace = items.mainSpace;
+      let flexTotal = 0;
       for (let i = 0; i < items.length; i++) {
         const item = items[i];
         let itemStyle = getStyle(item);
 
-        if (itemStyle.flex) {
-          itemStyle[mainSize] = 0;
+        if ((itemStyle.flex !== null) && (itemStyle.flex !== (void 0))) {
+          flexTotal += itemStyle.flex;
+          continue;
         }
-
-        itemStyle[mainSize] = itemStyle[mainSize] * scale;
-
-        itemStyle[mainStart] = currentMain;
-        itemStyle[mainEnd] = itemStyle[mainStart] + mainSign * itemStyle[mainSize];
-        currentMain = itemStyle[mainEnd];
       }
-    } else {
-      // process each flex line
-      flexLines.forEach((items) => {
-
-        let mainSpace = items.mainSpace;
-        let flexTotal = 0;
-        for (let i = 0; i < items.length; i++) {
-          const item = items[i];
-          let itemStyle = getStyle(item);
-
-          if ((itemStyle.flex !== null) && (itemStyle.flex !== (void 0))) {
-            flexTotal += itemStyle.flex;
-            continue;
+        if (flexTotal > 0) {
+          // There is flexible flex items
+          let currentMain = mainBase;
+          for (let i = 0; i < items.length; i++) {
+            const item = items[i];
+            let itemStyle = getStyle(item);
+    
+            if (itemStyle.flex) {
+              itemStyle[mainSize] = (mainSpace / flexTotal) * itemStyle.flex;
+            }
+    
+            itemStyle[mainStart] = currentMain;
+            itemStyle[mainEnd] = itemStyle[mainStart] + mainSign * itemStyle[mainSize];
+            currentMain = itemStyle[mainEnd];
           }
-          
-          if (flexTotal > 0) {
-            // There is flexible flex items
-            let currentMain = mainBase;
-            for (let i = 0; i < items.length; i++) {
-              const item = items[i];
-              let itemStyle = getStyle(item);
-      
-              if (itemStyle.flex) {
-                itemStyle[mainSize] = (mainSpace / flexTotal) * itemStyle.flex;
-              }
-      
-              itemStyle[mainStart] = currentMain;
-              itemStyle[mainEnd] = itemStyle[mainStart] + mainSign * itemStyle[mainSize];
-              currentMain = itemStyle[mainEnd];
-            }
-          } else {
-            // there is NO flexible flex items, which means,justifyContent should work
-            let currentMain = mainBase;
-            let step = 0;
-            if (style.justifyContent === 'flex-start') {
-              currentMain = mainBase;
-              step = 0;
-            }
-            if (style.justifyContent === 'flex-end') {
-              currentMain = mainSpace * mainSign + mainBase;
-              step = 0;
-            }
-            if (style.justifyContent === 'center') {
-              currentMain = mainSpace / 2 * mainSign + mainBase;
-              step = 0;
-            }
-            if (style.justifyContent === 'space-between') {
-              step = mainSpace / (items.length - 1) * mainSign;
-              currentMain = mainBase;
-            }
-            if (style.justifyContent === 'space-around') {
-              step = mainSpace / items.length * mainSign;
-              currentMain = step / 2 + mainBase;
-            }
-            for (let i = 0; i < items.length; i++) {
-              const item = items[i];
-              const itemStyle = getStyle(item);
-
-              itemStyle[mainStart] = currentMain;
-              itemStyle[mainEnd] = itemStyle[mainStart] + mainSign * itemStyle[mainSize]
-              currentMain = itemStyle[mainEnd] + step;
-            }
+        } else {
+          // there is NO flexible flex items, which means,justifyContent should work
+          let currentMain = mainBase;
+          let step = 0;
+          if (style.justifyContent === 'flex-start') {
+            currentMain = mainBase;
+            step = 0;
+          }
+          if (style.justifyContent === 'flex-end') {
+            currentMain = mainSpace * mainSign + mainBase;
+            step = 0;
+          }
+          if (style.justifyContent === 'center') {
+            currentMain = mainSpace / 2 * mainSign + mainBase;
+            step = 0;
+          }
+          if (style.justifyContent === 'space-between') {
+            step = mainSpace / (items.length - 1) * mainSign;
+            currentMain = mainBase;
+          }
+          if (style.justifyContent === 'space-around') {
+            step = mainSpace / items.length * mainSign;
+            currentMain = step / 2 + mainBase;
+          }
+          for (let i = 0; i < items.length; i++) {
+            const item = items[i];
+            const itemStyle = getStyle(item);//?
+            itemStyle[mainSize]//?
+            itemStyle[mainStart] = currentMain;
+            itemStyle[mainEnd] = itemStyle[mainStart] + mainSign * itemStyle[mainSize]
+            currentMain = itemStyle[mainEnd] + step;
           }
         }
-      })
-    }
-
+      
+    })
+  }
+  items
 
     // compute the cross axis sizes
     // align-items, slign-self
-    let crossSpace;
+  // let crossSpace;
 
-    if (!style[crossSize]) { // auto Sizing
-      crossSpace = 0;
-      elementStyle[corssSize] = 0;
-      for (let i = 0; i < flexLines.length; i++) {
-        elementStyle[corssSize] = elementStyle[corssSize] + flexLines[i].crossSpace;
-      }
-    } else {
-      crossSpace = style[crossSize]
-      for (let i = 0; i < flexLines.length; i++) {
-        crossSpace -= flexLines[i].crossSpace;
-      }
+  if (!style[crossSize]) { // auto Sizing
+    crossSpace = 0;
+    elementStyle[crossSize] = 0;
+    for (let i = 0; i < flexLines.length; i++) {
+      elementStyle[crossSize] = elementStyle[crossSize] + flexLines[i].crossSpace;
     }
-
-
-    if (style.flexWrap === 'wrap-reverse') {
-      crossBase = style[crossSize];
-    } else {
-      crossBase = 0;
+  } else {
+    crossSpace = style[crossSize]
+    for (let i = 0; i < flexLines.length; i++) {
+      crossSpace -= flexLines[i].crossSpace;
     }
-    let lineSize = style[crossSize] / flexLines.length;
-
-    let step;
-    if (style.alignContent === 'flex-start') {
-      crossBase += 0;
-      step = 0;
-    }
-    if (style.alignContent === 'flex-end') {
-      crossBase += crossSpace * crossSign;
-      step = 0;
-    }
-    if (style.alignContent === 'center') {
-      crossBase += crossSpace / 2 * crossSign;
-      step = 0;
-    }
-    if (style.alignContent === 'space-between') {
-      step = crossSpace / (flexLines.length - 1);
-      crossBase += 0;
-    }
-    if (style.alignContent === 'space-around') {
-      step = crossSpace / flexLines.length;
-      crossBase += crossSign * step / 2;
-    }
-    if (style.alignContent === 'stretch') {
-      step = 0;
-      crossBase += 0;
-    }
-    flexLines
-    flexLines.forEach((items) => {
-      let lineCrossSize = style.alignContent === 'stretch' ?
-        items.crossSpace + crossSpace / flexLines.length :
-        items.crossSpace;
-        for (let i = 0; i < items.length; i++) {
-          const item = items[i];
-          let itemStyle = getStyle(item);
-
-          let align = itemStyle.alignSelf || style.alignItems;
-
-          if (itemStyle[crossSize] === null) {
-            itemStyle[crossSize] = (align === 'stretch') ? 
-              lineCrossSize : 0
-          }
-          if (align === 'flex-start') {
-            itemStyle[crossStart] = crossBase;
-            itemStyle[crossEnd] = itemStyle[crossStart] + crossSign * itemStyle[crossSize];
-          }
-          if (align === 'flex-end') {
-            itemStyle[crossEnd] = crossBase + crossSign * lineCrossSize;
-            itemStyle[crossStart] = itemStyle[crossEnd] - crossSign * itemStyle[crossSize];
-          }
-          if (align === 'center') {
-            itemStyle[crossStart] = crossBase + crossSign * (lineCrossSize - itemStyle[crossSize] /2);
-            itemStyle[crossEnd] = itemStyle[crossStart] - crossSign * itemStyle[crossSize];
-          }
-          if (align === 'stretch') {
-            itemStyle[crossStart] = crossBase;
-            itemStyle[crossEnd] = crossBase + crossSign * ((itemStyle[crossSize] !== null && itemStyle[crossSize] !== (void 0)));
-
-            itemStyle[crossSize] = crossSign * (itemStyle[crossEnd] - itemStyle[crossStart])
-          }
-        }
-        crossBase += crossSign * (lineCrossSize + step);
-    });
-    items
   }
-}
+
+
+  if (style.flexWrap === 'wrap-reverse') {
+    crossBase = style[crossSize];
+  } else {
+    crossBase = 0;
+  }
+  let lineSize = style[crossSize] / flexLines.length;
+
+  let step;
+  if (style.alignContent === 'flex-start') {
+    crossBase += 0;
+    step = 0;
+  }
+  if (style.alignContent === 'flex-end') {
+    crossBase += crossSpace * crossSign;
+    step = 0;
+  }
+  if (style.alignContent === 'center') {
+    crossBase += crossSpace / 2 * crossSign;
+    step = 0;
+  }
+  if (style.alignContent === 'space-between') {
+    step = crossSpace / (flexLines.length - 1);
+    crossBase += 0;
+  }
+  if (style.alignContent === 'space-around') {
+    step = crossSpace / flexLines.length;
+    crossBase += crossSign * step / 2;
+  }
+  if (style.alignContent === 'stretch') {
+    step = 0;
+    crossBase += 0;
+  }
+  flexLines
+  flexLines.forEach((items) => {
+  let lineCrossSize = style.alignContent === 'stretch' ?
+    items.crossSpace + crossSpace / flexLines.length :
+    items.crossSpace;
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      let itemStyle = getStyle(item);
+
+      let align = itemStyle.alignSelf || style.alignItems;
+
+      if (itemStyle[crossSize] === null) {
+        itemStyle[crossSize] = (align === 'stretch') ? 
+          lineCrossSize : 0
+      }
+      if (align === 'flex-start') {
+        itemStyle[crossStart] = crossBase;
+        itemStyle[crossEnd] = itemStyle[crossStart] + crossSign * itemStyle[crossSize];
+      }
+      if (align === 'flex-end') {
+        itemStyle[crossEnd] = crossBase + crossSign * lineCrossSize;
+        itemStyle[crossStart] = itemStyle[crossEnd] - crossSign * itemStyle[crossSize];
+      }
+      if (align === 'center') {
+        itemStyle[crossStart] = crossBase + crossSign * (lineCrossSize - itemStyle[crossSize]) / 2;
+        itemStyle[crossEnd] = itemStyle[crossStart] - crossSign * itemStyle[crossSize];
+      }
+      if (align === 'stretch') {
+        itemStyle[crossStart] = crossBase;
+        itemStyle[crossEnd] = itemStyle[crossStart] + crossSign * (itemStyle[crossSize] !== null && itemStyle[crossSize] !== (void 0) ? itemStyle[crossSize] : lineCrossSize);
+
+        itemStyle[crossSize] = crossSign * (itemStyle[crossEnd] - itemStyle[crossStart])
+      }
+    }
+    crossBase += crossSign * (lineCrossSize + step);
+  });
+  }
 //--------------test----------------
 // const test = {
 //   attributes: [ { name: 'id', value: 'container' } ],
