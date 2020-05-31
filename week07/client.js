@@ -1,5 +1,7 @@
 const net = require("net"); // 文檔
+const images = require("images"); // 文檔
 const parser = require("./parser.js")
+const render = require("./render.js")
 
 
 
@@ -237,6 +239,10 @@ void async function () {
   let response = await request.send();
   let dom = parser.parseHTML(response.body);
 
-  console.log(JSON.stringify(dom, null, " "))
+  // console.log(JSON.stringify(dom, null, " "))
+
+  let viewport = images(800, 600);
+  render(viewport, dom);
+  viewport.save("viewport.jpg");
   
 }();

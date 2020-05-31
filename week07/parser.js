@@ -11,8 +11,9 @@ let currentTextNode = null;
 // 加入 addCSSRules函數，把CSS規則存到數組裡
 let rules = [];
 function addCSSRules(text) { 
-  var ast = css.parse(text);
+  var ast = css.parse(text);//?
   rules.push(...ast.stylesheet.rules);
+  rules
 }
 
 function match(element, selector) {
@@ -68,8 +69,8 @@ function compare(sp1, sp2) {
 
 function computeCSS(element) {
   var elements = stack.slice().reverse();
-  if (!element.compotedStyle) {
-    element.compotedStyle = {};
+  if (!element.computedStyle) {
+    element.computedStyle = {};
   }
 
   for (const rule of rules) {
@@ -79,7 +80,7 @@ function computeCSS(element) {
       continue;
     }
 
-    let matched = false;
+    // let matched = false;
 
     var j = 1;
     for (let i = 0; i < elements.length; i++) {
@@ -93,7 +94,7 @@ function computeCSS(element) {
 
     if (matched) {
       var sp = specificity(rule.selectors[0]);
-      var computedStyle = element.compotedStyle;
+      var computedStyle = element.computedStyle;
       for (const declaration of rule.declarations) {
         if (!computedStyle[declaration.property]) {
           computedStyle[declaration.property] = {}
@@ -109,7 +110,7 @@ function computeCSS(element) {
           }
         }
       }
-      console.log(element.compotedStyle) //?
+      console.log(computedStyle)//?
     }
   }
 }
@@ -136,7 +137,7 @@ function emit(token) {
     }
 
     computeCSS(element);
-    
+  
     top.children.push(element);
     
     if (!token.isSelfClosing) {
@@ -152,6 +153,7 @@ function emit(token) {
       if (top.tagName === "style") {
         addCSSRules(top.children[0].content);
       }
+      top
       layout(top);
       stack.pop();
     }
@@ -380,6 +382,37 @@ function selfClosingStartTag(c) {
     return beforeAttributeName(c)
   }
 }
+//-----------test-----------
+// const html = `<html maaa=a >
+// <head>
+//     <style>
+// #container {
+//   width: 500px;
+//   height: 300px;
+//   display: flex;
+// }
+// #container #myid {
+//   width: 200px;
+// }
+// #container .c1 {
+//   flex: 1;
+// }
+//     </style>
+// </head>
+// <body>
+//     <div id="container">
+//         <div id="myid"/>
+//         <div class="c1" />
+//     </div>
+// </body>
+// </html>`;
+
+// let state = data;
+// for (const c of html) {
+//   state = state(c);
+// }
+
+// state = state(EOF);
 
 module.exports.parseHTML = function parseHTML(html) {
     let state = data;
